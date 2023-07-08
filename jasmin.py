@@ -1,0 +1,359 @@
+from error import ErrorVariableNotFoundAtSymbolTable
+
+class Jasmin:
+    MAX_LOCALS = 300
+
+    def __init__(self, filename, symbolTable):
+        self.fileName = filename
+        self.file = open(filename + '.jsp', 'w+')
+        self.initFile()
+        self.symbolTable = symbolTable
+
+        self.top_index = 0
+        self.label_count = 0
+
+    def __write(self, string):
+        for s in string.split('\n'):
+            if s.strip():
+                self.file.write(s.strip() + "\n")
+
+    def initFile(self):
+        self.__write(
+            """
+            .class public {}
+            .super java/lang/Object
+            """.format(self.fileName)
+        )
+
+    def getVar(self, varName, scopeController):
+        if self.symbolTable[varName]:
+            variable = self.symbolTable[varName]
+        else:
+            raise ErrorVariableNotFoundAtSymbolTable(varName, scopeController)
+
+        return variable
+
+    def create(self, varName, varType, scopeControl, const: False, val: 0):
+        variable = self.getVar(varName, scopeControl)
+        if scopeControl:
+            if varType == 'bool' and val == 'true':
+                val = 1
+            elif varType == 'bool' and val == 'false':
+                val = 0
+            elif varType == 'float' and val == 0:
+                val = 0.0
+            elif varType == 'str' and val == 0:
+                val = "\"\""
+            # fazer instancia de variavel local
+            if variable.type == 'int' or variable.type == 'bool':
+                self.__write(
+                    """
+                    bipush {}
+                    istore {}
+                    """.format(val, variable.address)
+                )
+            elif variable.type == 'float':
+                self.__write(
+                    """
+                    ldc {}
+                    fstore {}
+                    """.format(val, variable.address)
+                )
+            elif variable.type == 'str':
+                self.__write(
+                    """
+                    ldc {}
+                    astore {}
+                    """.format(val, variable.address)
+                )
+        else:
+            if const:
+                if varType == 'bool' and val == 'true':
+                    val = 1
+                elif varType == 'bool' and val == 'false':
+                    val = 0
+                self.__write(
+                    """
+                    .field public static final {} {} = {}
+                    """.format(varName, typeConvert(varType), val)
+                )
+            else:
+                self.__write(
+                    """
+                    .field public static {} {}
+                    """.format(varName, typeConvert(varType))
+                )
+  
+
+    def createMain(self):
+        self.__write(
+            """
+            .method public static main([Ljava/lang/String;)V
+            .limit stack 10
+            .limit locals {}
+            """.format(self.MAX_LOCALS)
+        )
+
+    def create_temp(self, val, type, addr):
+        self.__write(
+            """
+            ldc {}
+            """.format(val)
+        )
+        return self.store_val(type, addr)
+
+    def store_val(self, type, addr):
+        if type == 'str':
+            self.__write(
+                """
+                astore {}
+                """.format(addr)
+            )
+        elif type == 'int' or type == 'bool':
+            self.__write(
+                """
+                istore {}
+                """.format(addr)
+            )
+        elif type == 'float':
+            self.__write(
+                """
+                fstore {}
+                """.format(addr)
+            )
+        return addr
+
+    def load_temp(self, val, type):
+        if type == 'int' or type == 'bool':
+            self.__write(
+                """
+                iload {}
+                """.format(val)
+            )
+        elif type == 'float':
+            self.__write(
+                """
+                fload {}
+                """.format(val)
+            )
+        elif type == 'str':
+            self.__write(
+                """
+                aload {}
+                """.format(val)
+            )
+
+    def load_var(self, var, controle_escopo, addr):
+        varData = self.symbolTable[var]
+
+        if varData.scope:
+            if varData.type == 'int' or varData.type == 'bool':
+                self.__write(
+                    """
+                     iload {}
+                     """.format(varData.address)
+                )
+            elif varData.type == 'float':
+                self.__write(
+                    """
+                    fload {}
+                    """.format(varData.address)
+                )
+            elif varData.type == 'str':
+                self.__write(
+                    """
+                    aload {}
+                    """.format(varData.address)
+                )
+        else:
+            self.__write(
+                """
+                getstatic {}/{} {}
+                """.format(self.fileName, var, typeConvert(varData.type))
+            )
+        return self.store_val(varData.type, addr)
+
+    def print(self, typeVal):
+        for type, val in typeVal:
+            self.__write(
+                """
+                getstatic java/lang/System/out Ljava/io/PrintStream;
+                """
+            )
+            self.load_temp(val, type)
+            self.__write(
+                """
+                invokevirtual java/io/PrintStream/print({})V
+                """.format(typeConvert(type))
+            )
+
+    def add(self, type, addr1, addr2, addr3):
+        self.load_temp(addr1, type)
+        self.load_temp(addr2, type)
+        if type == 'int':
+            self.__write(
+                """
+                iadd
+                """
+            )
+        elif type == 'float':
+            self.__write(
+                """
+                fadd
+                """
+            )
+        # concatenar string (descobrir como concatena string)
+        return self.store_val(type, addr3)
+
+    def sub(self, type, addr1, addr2, addr3):
+        self.load_temp(addr1, type)
+        self.load_temp(addr2, type)
+        if type == 'int':
+            self.__write(
+                """
+                isub
+                """
+            )
+        elif type == 'float':
+            self.__write(
+                """
+                fsub
+                """
+            )
+        return self.store_val(type, addr3)
+
+    def mult(self, type, addr1, addr2, addr3):
+        self.load_temp(addr1, type)
+        self.load_temp(addr2, type)
+        if type == 'int':
+            self.__write(
+                """
+                imul
+                """
+            )
+        elif type == 'float':
+            self.__write(
+                """
+                fmul
+                """
+            )
+        return self.store_val(type, addr3)
+
+    def div(self, type, addr1, addr2, addr3):
+        self.load_temp(addr1, type)
+        self.load_temp(addr2, type)
+        if type == 'int':
+            self.__write(
+                """
+                idiv
+                """
+            )
+        elif type == 'float':
+            self.__write(
+                """
+                fdiv
+                """
+            )
+        return self.store_val(type, addr3)
+
+    def unaryMinus(self, type, addr1, addr3):
+        self.load_temp(addr1, type)
+        if type == 'int':
+            self.__write(
+                """
+                bipush -1
+                imul
+                """
+            )
+        elif type == 'float':
+            self.__write(
+                """
+                ldc -1
+                fmul
+                """
+            )
+        return self.store_val(type, addr3)
+
+    def notOp(self, val, addr):
+        self.load_temp(val, 'bool')
+        self.__write(
+            """
+            ldc 1
+            ixor
+            """
+        )
+        return self.store_val('bool', addr)
+
+    def compareExpressions(self, type, val1, val2, addr3, op):
+        cmp = {'==': 'eq', '!=': 'ne', '>=': 'ge', '>': 'gt', '<=': 'le', '<': 'lt'}
+        self.load_temp(val1, type)
+        self.load_temp(val2, type)
+        if type in ['int', 'bool']:
+            self.__write(
+                """
+                if_icmp{} true{}
+                """.format(cmp[op], addr3)
+            )
+        elif type == 'float':
+            self.__write(
+                """
+                if{} true{}
+                """.format(cmp[op], addr3)
+            )
+        else:
+            self.__write(
+                """
+                if_acmp{} true{}
+                """.format(cmp[op], addr3)
+            )
+        self.__write(
+            """
+            ldc 0
+            goto cmp_end{}
+            true{}:
+            ldc 1
+            cmp_end{}:
+            """.format(addr3, addr3, addr3, addr3)
+        )
+        return self.store_val('bool', addr3)
+
+    def int_to_float(self, addr):
+        self.load_temp(addr, "int")
+        self.__write(
+            """
+            i2f
+            """
+        )
+        return self.store_val("float", addr)
+
+    def closeMain(self):
+        self.__write(
+            """
+            return
+            .end method
+            """
+        )
+
+class Id:
+    def __init__(self, address: int = None, type=None, scope=None, function: bool = False, local: bool = False):
+        self.type = type
+        self.scope = scope 
+        self.address = address
+        self.function = function
+        self.local = local
+
+    def printId(self):
+        print("tipo: ", self.type)
+        print("escopo: ", self.scope)
+        print("endereco: ", self.address)
+        print("funcao: ", self.function)
+        print("local: ", self.local)
+
+def typeConvert(type):
+        descriptor = {'int': 'I', 'float': 'F', 'str': 'Ljava/lang/String;', 'bool': 'Z', None: 'V'}
+        if type != 'int' and type != 'float' and type != 'str' and type != 'bool' and type != None:
+            return descriptor[type.type]
+        else:
+            return descriptor[type]  
+
+   
