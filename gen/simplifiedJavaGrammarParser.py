@@ -1,4 +1,4 @@
-# Generated from C:/Users/jose1/Documents/UFPI/6º período/Compiladores/trabFinal/javaSimplificado\simplifiedJavaGrammar.g4 by ANTLR 4.12.0
+# Generated from C:/Users/jose1/Documents/UFPI/6ï¿½ perï¿½odo/Compiladores/trabFinal/javaSimplificado\simplifiedJavaGrammar.g4 by ANTLR 4.12.0
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -638,7 +638,7 @@ class simplifiedJavaGrammarParser ( Parser ):
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.terminal = None # Token
+            self.terminal = []
 
         def ID(self, i:int=None):
             if i is None:
@@ -698,10 +698,10 @@ class simplifiedJavaGrammarParser ( Parser ):
             self.state = 123
             self.match(simplifiedJavaGrammarParser.T__10)
             self.state = 124
-            localctx.terminal = self._input.LT(1)
+            localctx.terminal.append(self._input.LT(1))
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 32212254720) != 0)):
-                localctx.terminal = self._errHandler.recoverInline(self)
+                localctx.terminal.append(self._errHandler.recoverInline(self))
             else:
                 self._errHandler.reportMatch(self)
                 self.consume()
@@ -716,10 +716,10 @@ class simplifiedJavaGrammarParser ( Parser ):
                 self.state = 127
                 self.match(simplifiedJavaGrammarParser.T__10)
                 self.state = 128
-                localctx.terminal = self._input.LT(1)
+                localctx.terminal.append(self._input.LT(1))
                 _la = self._input.LA(1)
                 if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 32212254720) != 0)):
-                    localctx.terminal = self._errHandler.recoverInline(self)
+                    localctx.terminal.append(self._errHandler.recoverInline(self))
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
