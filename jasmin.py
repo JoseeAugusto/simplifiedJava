@@ -36,9 +36,9 @@ class Jasmin:
     def create(self, varName, varType, scopeControl, const: False, val: 0):
         variable = self.getVar(varName, scopeControl)
         if scopeControl:
-            if varType == 'bool' and val == 'true':
+            if varType == 'bool' and val == 'True':
                 val = 1
-            elif varType == 'bool' and val == 'false':
+            elif varType == 'bool' and val == 'False':
                 val = 0
             elif varType == 'float' and val == 0:
                 val = 0.0
@@ -68,9 +68,9 @@ class Jasmin:
                 )
         else:
             if const:
-                if varType == 'bool' and val == 'true':
+                if varType == 'bool' and val == 'True':
                     val = 1
-                elif varType == 'bool' and val == 'false':
+                elif varType == 'bool' and val == 'False':
                     val = 0
                 self.__write(
                     """

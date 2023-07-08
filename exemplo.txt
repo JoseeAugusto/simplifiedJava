@@ -1,3 +1,5 @@
 main:
-    print(5+5*4/2);
+    var:
+    const n1 = 5, n2 = 10;
+    print(n1 == n2);
 end
