@@ -5,7 +5,7 @@ if __name__ is not None and "." in __name__:
 else:
     from gen.simplifiedJavaGrammarParser import simplifiedJavaGrammarParser
 from jasmin import Jasmin, Id
-from error import ErroTipoIncompativelDecl, ErroTipoInesperado, ErrorTypeNotReported, ErroBreak, ErrorDeclarationAlreadyMade, \
+from error import ErroTipoIncompativelDecl, ErrorUnexpectedType, ErrorTypeNotReported, ErroBreak, ErrorDeclarationAlreadyMade, \
     ErrorVariableNotDeclared, ErrorTypeExpression, ErroTipoExpressaoDiferenteDeIncremento, ErroRetorno, \
     ErroDuplaExpressao, ErroArgumentoEsperado, ErroDeclaracaoDepoisDoBloco
 
@@ -17,6 +17,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
     scopeController = False
     stackBlock = []
     newAddressController = 0
+    stackElseBlock = []
+    countIf = 0
 
     def __init__(self, filename):
         self.jasmin = Jasmin(filename, self.symbolTable)
@@ -157,10 +159,20 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#ifCommand.
     def enterIfCommand(self, ctx:simplifiedJavaGrammarParser.IfCommandContext):
+        ctx.ifBlock().expression().inhType = 'if'
+        self.countIf += 1
+        if ctx.elseBlock() != None:
+            self.stackElseBlock.append(self.countIf-1)
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#ifCommand.
     def exitIfCommand(self, ctx:simplifiedJavaGrammarParser.IfCommandContext):
+        if ctx.ifBlock().expression().type != 'bool':
+            raise ErrorUnexpectedType(ctx.start.line, 'bool', ctx.expressao().type)
+        if ctx.elseBlock() != None:
+            self.jasmin.make_label('end_else_' + str(ctx.ifBlock().expression().end_label))
+        else:
+            self.jasmin.make_label('if_' + str(ctx.ifBlock().expression().end_label))
         pass
 
 
@@ -193,6 +205,11 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#scanfCommand.
     def exitScanfCommand(self, ctx:simplifiedJavaGrammarParser.ScanfCommandContext):
+        for var in ctx.ID():
+            ctxId = var.getText()
+            if ctxId not in self.symbolTable:
+                raise ErrorVariableNotDeclared(ctx.start.line, ctxId)
+            self.jasmin.scanf(ctxId, self.scopeController)
         pass
 
 
@@ -216,6 +233,7 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#elseBlock.
     def enterElseBlock(self, ctx:simplifiedJavaGrammarParser.ElseBlockContext):
+        self.jasmin.enter_else(self.stackElseBlock.pop())
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#elseBlock.
@@ -229,6 +247,25 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#assigmentCommand.
     def exitAssigmentCommand(self, ctx:simplifiedJavaGrammarParser.AssigmentCommandContext):
+        ctxId = ctx.ID().getText()
+        if ctxId not in self.symbolTable:
+            raise ErrorVariableNotDeclared(ctx.start.line, ctxId)
+        ctxVal = ctx.expression().val
+        variable = self.symbolTable[ctxId]
+
+        if self.scopeController:
+            expected = variable.type
+            received = ctx.expression().type
+
+            self.jasmin.symbolTable[ctxId].type = ctx.expression().type
+            if (expected == 'int' and received == 'float') or (expected == 'float' and received == 'int'):
+                expected = 'float'
+                received = 'float'
+
+            if expected != received:
+                raise ErrorUnexpectedType(ctx.start.line, expected, received)
+
+            self.jasmin.store_var(ctxId, ctxVal, variable.address, self.scopeController)
         pass
 
 
@@ -240,6 +277,11 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
     def exitGoTerm(self, ctx:simplifiedJavaGrammarParser.GoTermContext):
         ctx.type = ctx.term().type
         ctx.val = ctx.term().val
+
+        if ctx.inhType == 'while':
+            self.jasmin.write_inh(ctx.inh.format(ctx.val))
+        elif ctx.inhType == 'if':
+            ctx.end_label = self.jasmin.enter_if(ctx.val)
         pass
 
 
@@ -261,6 +303,11 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
         ctx.type = 'bool'
         ctx.val = self.jasmin.compareExpressions(expressionType, expressionVal, termVal, self.newAddressController, ctx.op.text)
         self.newAddressController += 1
+
+        if ctx.inhType == 'while':
+            self.jasmin.write_inh(ctx.inh.format(ctx.term().val + 1))
+        elif ctx.inhType == 'if':
+            ctx.end_label = self.jasmin.enter_if(ctx.term().val + 1)
         pass
 
 

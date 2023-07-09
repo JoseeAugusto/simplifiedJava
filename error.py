@@ -13,10 +13,10 @@ class ErrorTypeNotReported(Exception):
         message = 'Line {}: Type not reported: {}'.format(line, id)
         super().__init__(message)
 
-class ErroTipoInesperado(Exception):
-    def __init__(self, line, receivedType):
-        mensagem = 'Linha {}: Esperado o tipo int ou float mas foi recebido o tipo {}'.format(line, receivedType)
-        super().__init__(mensagem)
+class ErrorUnexpectedType(Exception):
+    def __init__(self, line, expectedType, receivedType):
+        message = 'Line {}: Expected type {} but {} was received'.format(line, expectedType, receivedType)
+        super().__init__(message)
 
 class ErroTipoIncompativelDecl(Exception):
     def __init__(self, line, type):

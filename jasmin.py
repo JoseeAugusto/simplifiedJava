@@ -143,7 +143,7 @@ class Jasmin:
                 """.format(val)
             )
 
-    def load_var(self, var, controle_escopo, addr):
+    def load_var(self, var, scopeController, addr):
         varData = self.symbolTable[var]
 
         if varData.scope:
@@ -173,6 +173,54 @@ class Jasmin:
             )
         return self.store_val(varData.type, addr)
 
+    def store_var(self, var, val, address, scopeController):
+        varData = self.getVar(var, scopeController)
+
+        if varData.scope:
+            if varData.type == 'int' or varData.type == 'bool':
+                self.__write(
+                    """
+                    iload {}
+                    istore {}
+                    """.format(val, address)
+                )
+            elif varData.type == 'float':
+                self.__write(
+                    """
+                    fload {}
+                    fstore {}
+                    """.format(val, address)
+                )
+            elif varData.type == 'str':
+                self.__write(
+                    """
+                    aload {}
+                    astore {}
+                    """.format(val, address)
+                )
+        else:
+            self.load_temp(val, varData.type)
+            self.__write(
+                """
+                putstatic {}/{} {}
+                """.format(self.fileName, var, typeConvert(varData.type))
+            )
+
+    def enter_else(self, index):
+        self.__write(
+            """
+            goto end_else_{}
+            if_{}:
+            """.format(index, index)
+        )
+
+    def make_label(self, labelName):
+        self.__write(
+            """
+            {}:
+            """.format(labelName)
+        )
+
     def print(self, typeVal):
         for type, val in typeVal:
             self.__write(
@@ -186,6 +234,58 @@ class Jasmin:
                 invokevirtual java/io/PrintStream/print({})V
                 """.format(typeConvert(type))
             )
+
+    def scanf(self, var, controle_escopo):
+        table = self.symbolTable[var]
+        t = table.type
+
+        self.__write(
+            """
+            new java/util/Scanner
+            dup
+            getstatic java/lang/System/in Ljava/io/InputStream;
+            invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
+            """
+        )
+        if t == 'str':
+            self.__write(
+                """
+                invokevirtual java/util/Scanner/nextLine()Ljava/lang/String;
+                """
+            )
+        elif t == 'int':
+            self.__write(
+                """
+                invokevirtual java/util/Scanner/nextInt()I
+                """.format(typeConvert(table.type))
+            )
+        elif t == 'float':
+            self.__write(
+                """
+                invokevirtual java/util/Scanner/nextFloat()F
+                """.format(typeConvert(table.type))
+            )
+        elif t == 'bool':
+            self.__write(
+                """
+                invokevirtual java/util/Scanner/nextBoolean()Z
+                """.format(typeConvert(table.type))
+            )
+
+        addr = self.store_val(table.type, table.address)
+        if not table.scope:
+            self.store_var(var, table.address, None, None)
+
+    def enter_if(self, id):
+        self.load_temp(id, 'int')
+        self.__write(
+            """
+            ldc 0
+            if_icmpeq if_{}
+            """.format(self.label_count, self.label_count)
+        )
+        self.label_count += 1
+        return self.label_count - 1
 
     def add(self, type, addr1, addr2, addr3):
         self.load_temp(addr1, type)
