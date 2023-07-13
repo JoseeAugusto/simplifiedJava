@@ -1,0 +1,16 @@
+main:
+    var:
+    i, j : int;
+    while(i < 3):
+        i = i + 1;
+        if(i == 1):
+            print("valor do i: ", i, "\n");
+        end
+        if(i == 2):
+            print("valor do i: ", i, "\n");
+        end
+        if(i == 3):
+            print("valor do i: ", i, "\n");
+        end
+    end
+end

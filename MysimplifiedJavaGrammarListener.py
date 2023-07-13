@@ -5,9 +5,9 @@ if __name__ is not None and "." in __name__:
 else:
     from gen.simplifiedJavaGrammarParser import simplifiedJavaGrammarParser
 from jasmin import Jasmin, Id
-from error import ErroTipoIncompativelDecl, ErrorUnexpectedType, ErrorTypeNotReported, ErroBreak, ErrorDeclarationAlreadyMade, \
+from error import ErroTipoIncompativelDecl, ErrorUnexpectedType, ErrorTypeNotReported, ErrorBreakScope, ErrorDeclarationAlreadyMade, \
     ErrorVariableNotDeclared, ErrorTypeExpression, ErroTipoExpressaoDiferenteDeIncremento, ErroRetorno, \
-    ErroDuplaExpressao, ErroArgumentoEsperado, ErroDeclaracaoDepoisDoBloco
+    ErroDuplaExpressao, ErroArgumentoEsperado, ErroDeclaracaoDepoisDoBloco, ErrorConstantChangeValue
 
 
 # This class defines a complete listener for a parse tree produced by simplifiedJavaGrammarParser.
@@ -19,6 +19,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
     newAddressController = 0
     stackElseBlock = []
     countIf = 0
+    stackWhile = []
+    countWhile = 0
 
     def __init__(self, filename):
         self.jasmin = Jasmin(filename, self.symbolTable)
@@ -86,7 +88,7 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             if token.getText() in self.symbolTable and self.symbolTable[token.getText()].scope == False:
                 self.symbolTableCopy[token.getText()] = self.symbolTable[token.getText()]
 
-            self.symbolTable[token.getText()] = Id(type=ctx.TYPE().getText(), scope=self.scopeController, address=self.newAddressController)
+            self.symbolTable[token.getText()] = Id(type=ctx.TYPE().getText(), scope=self.scopeController, address=self.newAddressController, isConstant=False)
             self.newAddressController += 1 # atualiza o proximo endereco disponivel
             self.jasmin.create(token.getText(), ctx.TYPE().getText(), self.scopeController, False, 0)
         pass
@@ -112,25 +114,25 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             
             if ctx.INT(countInt) != None and ctx.INT(countInt).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='int', scope=self.scopeController,
-                                                        address=self.newAddressController)
+                                                        address=self.newAddressController, isConstant=True)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'int', self.scopeController, True, ctx.INT(countInt).getText())
                 countInt += 1
             elif ctx.FLOAT(countFloat) != None and ctx.FLOAT(countFloat).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='float', scope=self.scopeController,
-                                                        address=self.newAddressController)
+                                                        address=self.newAddressController, isConstant=True)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'float', self.scopeController, True, ctx.FLOAT(countFloat).getText())
                 countFloat += 1
             elif ctx.STRING(countString) != None and ctx.STRING(countString).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='str', scope=self.scopeController,
-                                                        address=self.newAddressController)
+                                                        address=self.newAddressController, isConstant=True)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'str', self.scopeController, True, ctx.STRING(countString).getText())
                 countString += 1
             else:
                 self.symbolTable[token.getText()] = Id(type='bool', scope=self.scopeController,
-                                                        address=self.newAddressController)
+                                                        address=self.newAddressController, isConstant=True)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'bool', self.scopeController, True, ctx.BOOLEAN(countBool).getText())
                 countBool += 1
@@ -178,10 +180,30 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#whileCommand.
     def enterWhileCommand(self, ctx:simplifiedJavaGrammarParser.WhileCommandContext):
+        ctx.expression().inhType = 'while'
+        self.countWhile += 1
+        self.stackWhile.append(self.countWhile - 1)
+        ctx.expression().inh = self.jasmin.initWhile(self.countWhile - 1)
+        self.newAddressController += 1
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#whileCommand.
     def exitWhileCommand(self, ctx:simplifiedJavaGrammarParser.WhileCommandContext):
+        if ctx.expression().type != 'bool':
+            raise ErrorUnexpectedType(ctx.start.line, 'bool', ctx.expression().type)
+        self.jasmin.exitWhile(self.stackWhile.pop())
+        pass
+
+    # Enter a parse tree produced by simplifiedJavaGrammarParser#breakCommand.
+    def enterBreakCommand(self, ctx:simplifiedJavaGrammarParser.BreakCommandContext):
+        if len(self.stackWhile) != 0:
+            self.jasmin.breakWhile(self.stackWhile[-1])
+        else:
+            raise ErrorBreakScope(ctx.start.line)
+        pass
+
+    # Exit a parse tree produced by simplifiedJavaGrammarParser#breakCommand.
+    def exitBreakCommand(self, ctx:simplifiedJavaGrammarParser.BreakCommandContext):
         pass
 
 
@@ -209,6 +231,9 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             ctxId = var.getText()
             if ctxId not in self.symbolTable:
                 raise ErrorVariableNotDeclared(ctx.start.line, ctxId)
+            variable = self.symbolTable[ctxId]
+            if variable.isConstant:
+                raise ErrorConstantChangeValue(ctx.start.line)  
             self.jasmin.scanf(ctxId, self.scopeController)
         pass
 
@@ -252,6 +277,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             raise ErrorVariableNotDeclared(ctx.start.line, ctxId)
         ctxVal = ctx.expression().val
         variable = self.symbolTable[ctxId]
+        if variable.isConstant:
+            raise ErrorConstantChangeValue(ctx.start.line)
 
         if self.scopeController:
             expected = variable.type

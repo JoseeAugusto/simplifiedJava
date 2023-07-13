@@ -287,6 +287,32 @@ class Jasmin:
         self.label_count += 1
         return self.label_count - 1
 
+    def initWhile(self, loop_idx):
+        self.__write(
+            """
+            enter_while{}:
+            """.format(loop_idx)
+        )
+        return "iload {}\n" + "ldc 1\nif_icmpne break{}".format(loop_idx)
+
+    def exitWhile(self, loop_idx):
+        self.__write(
+            """
+            goto enter_while{}
+            break{}:
+            """.format(loop_idx, loop_idx)
+        )
+
+    def breakWhile(self, loop_idx):
+        self.__write(
+            """
+            goto break{}
+            """.format(loop_idx)
+        )
+
+    def write_inh(self, line):
+        self.__write(line)
+
     def add(self, type, addr1, addr2, addr3):
         self.load_temp(addr1, type)
         self.load_temp(addr2, type)
@@ -435,19 +461,13 @@ class Jasmin:
         )
 
 class Id:
-    def __init__(self, address: int = None, type=None, scope=None, function: bool = False, local: bool = False):
+    def __init__(self, address: int = None, type=None, scope=None, function: bool = False, local: bool = False, isConstant: bool = False):
         self.type = type
         self.scope = scope 
         self.address = address
         self.function = function
         self.local = local
-
-    def printId(self):
-        print("tipo: ", self.type)
-        print("escopo: ", self.scope)
-        print("endereco: ", self.address)
-        print("funcao: ", self.function)
-        print("local: ", self.local)
+        self.isConstant = isConstant
 
 def typeConvert(type):
         descriptor = {'int': 'I', 'float': 'F', 'str': 'Ljava/lang/String;', 'bool': 'Z', None: 'V'}

@@ -1,0 +1,15 @@
+main:
+    var:
+    i, n1 : int;
+    i = 0;
+    while(i < 3):
+        scanf(n1);
+        i = i + 1;
+        print("indice: ", i, "\n");
+        if(i == n1):
+            print("numero digitado igual ao indice\n");
+        else:
+            print("diferente\n");
+        end
+    end
+end

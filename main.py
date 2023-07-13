@@ -14,9 +14,11 @@ if __name__ == '__main__':
     # parte analise sintatica
     parser = simplifiedJavaGrammarParser(streams)
     tree = parser.program()
+    if parser.getNumberOfSyntaxErrors() > 0:
+        exit(1)
 
     # parte analise semantica
-    filename = 'programExample'
+    filename = 'ex'
     l = MySimplifiedJavaGrammarListener(filename)
     walker = ParseTreeWalker()
     walker.walk(l, tree)

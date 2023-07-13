@@ -23,10 +23,10 @@ class ErroTipoIncompativelDecl(Exception):
         mensagem = 'Linha {}: Esperado o tipo {} na declaração da constante'.format(line, type)
         super().__init__(mensagem)
 
-class ErroBreak(Exception):
+class ErrorBreakScope(Exception):
     def __init__(self, line):
-        mensagem = 'Linha {}: Break fora do loop'.format(line)
-        super().__init__(mensagem)
+        message = 'Line {}: break out of a while scope'.format(line)
+        super().__init__(message)
 
 class ErrorTypeExpression(Exception):
     def __init__(self, line, operation, type1, type2=None):
@@ -67,3 +67,8 @@ class ErroDeclaracaoDepoisDoBloco(Exception):
     def __init__(self):
         mensagem = 'Variaveis declaradas depois do inicio da funcao'
         super().__init__(mensagem)
+
+class ErrorConstantChangeValue(Exception):
+    def __init__(self, line):
+        message = 'Line {}: Constants cannot be changed'.format(line)
+        super().__init__(message)

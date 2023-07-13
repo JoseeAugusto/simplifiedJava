@@ -1,4 +1,4 @@
-# Generated from C:/Users/jose1/Documents/UFPI/6º período/Compiladores/trabFinal/javaSimplificado\simplifiedJavaGrammar.g4 by ANTLR 4.12.0
+# Generated from C:/Users/jose1/Documents/UFPI/6º período/Compiladores/trabFinal/javaSimplificadoCompleto\simplifiedJavaGrammar.g4 by ANTLR 4.12.0
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .simplifiedJavaGrammarParser import simplifiedJavaGrammarParser
@@ -95,6 +95,15 @@ class simplifiedJavaGrammarListener(ParseTreeListener):
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#whileCommand.
     def exitWhileCommand(self, ctx:simplifiedJavaGrammarParser.WhileCommandContext):
+        pass
+
+
+    # Enter a parse tree produced by simplifiedJavaGrammarParser#breakCommand.
+    def enterBreakCommand(self, ctx:simplifiedJavaGrammarParser.BreakCommandContext):
+        pass
+
+    # Exit a parse tree produced by simplifiedJavaGrammarParser#breakCommand.
+    def exitBreakCommand(self, ctx:simplifiedJavaGrammarParser.BreakCommandContext):
         pass
 
 

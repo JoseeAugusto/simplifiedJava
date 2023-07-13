@@ -1,0 +1,23 @@
+main:
+    var:
+    i, j, k: int;
+    
+    i = 0;
+    j = 0;
+    k = 0;
+    while(i < 3):
+        i = i + 1;
+        while(j < 3):
+            j = j + 1;
+            print(j);
+        end
+        print("\n");
+        j = 0;
+    end
+
+    print("\n\n");
+    while(k < 3):
+        print("Deu certo\n");
+        k = k + 1;
+    end
+end

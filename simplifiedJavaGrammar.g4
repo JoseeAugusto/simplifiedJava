@@ -1,15 +1,15 @@
 grammar simplifiedJavaGrammar;
 
 program
-    : functionDeclarationArea* main
+    : functionDeclarationArea* main EOF
     ;
 
 functionDeclarationArea
-    : ID '(' (TYPE ID(',' TYPE ID)*)? ')' ':' (TYPE | 'void') variablesDeclarationArea* commands* 'end'
+    : ID '(' (TYPE ID(',' TYPE ID)*)? ')' ':' (TYPE | VOID) (variablesDeclarationArea)? commands* 'end'
     ;
 
 main
-    : 'main' ':' variablesDeclarationArea* commands* 'end'
+    : 'main' ':' (variablesDeclarationArea)? commands* 'end'
     ;
 
 variablesDeclarationArea
@@ -32,6 +32,7 @@ commands
     | printCommand
     | scanfCommand
     | returnCommand
+    | breakCommand
     ;
 
 callFunctionCommand
@@ -43,7 +44,11 @@ ifCommand
     ;
 
 whileCommand
-    : 'while' '(' expression ')' ':' commands* ('break;')? 'end'
+    : 'while' '(' expression ')' ':' commands* 'end'
+    ;
+
+breakCommand
+    : 'break;'
     ;
 
 printCommand
@@ -115,6 +120,10 @@ TYPE
     | 'str'
     | 'float'
     | 'bool'
+    ;
+
+VOID
+    : 'void'
     ;
 
 INT
