@@ -423,6 +423,7 @@ class Jasmin:
         elif type == 'float':
             self.__write(
                 """
+                fcmpl
                 if{} true{}
                 """.format(cmp[op], addr3)
             )

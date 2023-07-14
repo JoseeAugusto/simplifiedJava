@@ -5,7 +5,7 @@ from gen.simplifiedJavaGrammarParser import simplifiedJavaGrammarParser
 from MysimplifiedJavaGrammarListener import MySimplifiedJavaGrammarListener
 
 if __name__ == '__main__':
-    file = FileStream("exemplo.txt")
+    file = FileStream("exemplo7.txt")
 
     # parte lexica
     lexer = simplifiedJavaGrammarLexer(file)

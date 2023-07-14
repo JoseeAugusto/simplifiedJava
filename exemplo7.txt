@@ -1,0 +1,13 @@
+main:
+    var:
+        n1, n2: float;
+
+    n1 = 10.0;
+    n2 = 5.0;
+
+    if((n1+n2)/2 >= 7.0):
+        print("aprovado\n");
+    else:
+    print("reprovado\n");
+    end
+end

@@ -5,25 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="751d5daf-d32c-45a7-b670-1817b93f9246" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/javaSimplificadoCompleto.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.antlr/simplifiedJavaGrammar.interp" beforeDir="false" afterPath="$PROJECT_DIR$/.antlr/simplifiedJavaGrammar.interp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.antlr/simplifiedJavaGrammarParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/.antlr/simplifiedJavaGrammarParser.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MysimplifiedJavaGrammarListener.py" beforeDir="false" afterPath="$PROJECT_DIR$/MysimplifiedJavaGrammarListener.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/error.py" beforeDir="false" afterPath="$PROJECT_DIR$/error.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gen/simplifiedJavaGrammar.interp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gen/simplifiedJavaGrammar.tokens" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gen/simplifiedJavaGrammarLexer.interp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gen/simplifiedJavaGrammarLexer.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gen/simplifiedJavaGrammarLexer.tokens" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gen/simplifiedJavaGrammarListener.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gen/simplifiedJavaGrammarParser.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/jasmin.py" beforeDir="false" afterPath="$PROJECT_DIR$/jasmin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ex.class" beforeDir="false" afterPath="$PROJECT_DIR$/ex.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ex.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/ex.jsp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/programExample.class" beforeDir="false" afterPath="$PROJECT_DIR$/programExample.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/programExample.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/programExample.jsp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simplifiedJavaGrammar.g4" beforeDir="false" afterPath="$PROJECT_DIR$/simplifiedJavaGrammar.g4" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
