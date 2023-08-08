@@ -5,7 +5,7 @@ from gen.simplifiedJavaGrammarParser import simplifiedJavaGrammarParser
 from MysimplifiedJavaGrammarListener import MySimplifiedJavaGrammarListener
 
 if __name__ == '__main__':
-    file = FileStream("exemplo9.txt")
+    file = FileStream("exemplo8.txt")
 
     # parte lexica
     lexer = simplifiedJavaGrammarLexer(file)
@@ -22,3 +22,4 @@ if __name__ == '__main__':
     l = MySimplifiedJavaGrammarListener(filename)
     walker = ParseTreeWalker()
     walker.walk(l, tree)
+    print("program " + filename + ".jsp generated")

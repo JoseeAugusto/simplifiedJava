@@ -23,11 +23,6 @@ class ErrorUnexpectedType(Exception):
         message = 'Line {}: Expected type {} but {} was received'.format(line, expectedType, receivedType)
         super().__init__(message)
 
-class ErroTipoIncompativelDecl(Exception):
-    def __init__(self, line, type):
-        mensagem = 'Linha {}: Esperado o tipo {} na declaração da constante'.format(line, type)
-        super().__init__(mensagem)
-
 class ErrorBreakScope(Exception):
     def __init__(self, line):
         message = 'Line {}: break out of a while scope'.format(line)
@@ -48,26 +43,6 @@ class ErrorTypeExpression(Exception):
         message = 'line {}: Operation {} not supported for the types: {} e {}'.format(line, operation, type1, type2) if type2 else 'Line {}: Operation {} not supported for the types: {}'.format(line, operation, type1)
         super().__init__(message)
 
-class ErroTipoExpressaoDiferenteDeIncremento(Exception):
-    def __init__(self, line):
-        mensagem = 'Linha {}: Variaveis diferentes na declaracao do for e no incremento'.format(line)
-        super().__init__(mensagem)
-
-class ErroRetorno(Exception):
-    def __init__(self, line):
-        mensagem = 'Linha {}: Retorno fora do escopo da função'.format(line)
-        super().__init__(mensagem)
-
-class ErroTipoInesperado(Exception):
-    def __init__(self, line, expected_type, received_type):
-        mensagem = 'Linha {}: Esperado tipo {}, mas foi recebido {}'.format(line, expected_type, received_type)
-        super().__init__(mensagem)
-
-class ErroDuplaExpressao(Exception):
-    def __init__(self, line):
-        mensagem = 'Linha {}: Expressão possui mais comparadores do que atributos'.format(line)
-        super().__init__(mensagem)
-
 class ErrorExpectedArgument(Exception):
     def __init__(self, line, expectedArgs, receivedArgs):
         message = 'Line {}: Expected {} arguments, but {} received'.format(line, expectedArgs, receivedArgs)
@@ -77,11 +52,6 @@ class ErrorVariableNotFoundAtSymbolTable(Exception):
     def __init__(self, varName, scope):
         message = 'Variable {} not found in scope {}'.format(varName, 'LOCAL' if scope else 'GLOBAL')
         super().__init__(message)
-
-class ErroDeclaracaoDepoisDoBloco(Exception):
-    def __init__(self):
-        mensagem = 'Variaveis declaradas depois do inicio da funcao'
-        super().__init__(mensagem)
 
 class ErrorConstantChangeValue(Exception):
     def __init__(self, line):

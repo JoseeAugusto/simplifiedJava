@@ -8,4 +8,9 @@ end
 
 main:
     print(soma());
+    
+    if(True>False):
+        print("oi\n");
+        print(5+2.7);
+    end
 end

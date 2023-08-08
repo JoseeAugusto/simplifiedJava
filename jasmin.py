@@ -35,56 +35,36 @@ class Jasmin:
 
     def create(self, varName, varType, scopeControl, const: False, val: 0):
         variable = self.getVar(varName, scopeControl)
-        if scopeControl:
-            if varType == 'bool' and val == 'True':
-                val = 1
-            elif varType == 'bool' and val == 'False':
-                val = 0
-            elif varType == 'float' and val == 0:
-                val = 0.0
-            elif varType == 'str' and val == 0:
-                val = "\"\""
-            # fazer instancia de variavel local
-            if variable.type == 'int' or variable.type == 'bool':
-                self.__write(
-                    """
-                    bipush {}
-                    istore {}
-                    """.format(val, variable.address)
-                )
-            elif variable.type == 'float':
-                self.__write(
-                    """
-                    ldc {}
-                    fstore {}
-                    """.format(val, variable.address)
-                )
-            elif variable.type == 'str':
-                self.__write(
-                    """
-                    ldc {}
-                    astore {}
-                    """.format(val, variable.address)
-                )
-        else:
-            if const:
-                if varType == 'bool' and val == 'True':
-                    val = 1
-                elif varType == 'bool' and val == 'False':
-                    val = 0
-                self.__write(
-                    """
-                    .field public static final {} {} = {}
-                    """.format(varName, typeConvert(varType), val)
-                )
-            else:
-                self.__write(
-                    """
-                    .field public static {} {}
-                    """.format(varName, typeConvert(varType))
-                )
+        if varType == 'bool' and val == 'True':
+            val = 1
+        elif varType == 'bool' and val == 'False':
+            val = 0
+        elif varType == 'float' and val == 0:
+            val = 0.0
+        elif varType == 'str' and val == 0:
+            val = "\"\""
+        if variable.type == 'int' or variable.type == 'bool':
+            self.__write(
+                """
+                bipush {}
+                istore {}
+                """.format(val, variable.address)
+            )
+        elif variable.type == 'float':
+            self.__write(
+                """
+                ldc {}
+                fstore {}
+                """.format(val, variable.address)
+            )
+        elif variable.type == 'str':
+            self.__write(
+                """
+                ldc {}
+                astore {}
+                """.format(val, variable.address)
+            )
   
-
     def createMain(self):
         self.__write(
             """
@@ -108,7 +88,6 @@ class Jasmin:
         )
         for idx, p in enumerate(parameters):
             self.symbolTable[p].address = idx
-            self.symbolTable[p].local = True
 
     def closeFunction(self):
         self.__write(
@@ -128,7 +107,7 @@ class Jasmin:
             )
             return
 
-        self.load_temp(val, type)
+        self.loadTemp(val, type)
         if returnType == 'I' or returnType == 'Z':
             self.__write(
                 """
@@ -158,24 +137,24 @@ class Jasmin:
         variable = self.symbolTable[func_name]
         args = ''
         for p, t in zip(params, types):
-            self.load_temp(p, t)
+            self.loadTemp(p, t)
             args += typeConvert(t)
         self.__write(
             """
             invokestatic {}.{}({}){}
             """.format(self.fileName, func_name, args, typeConvert(variable.type))
         )
-        return self.store_val(variable.type, variable.address)
+        return self.storeVal(variable.type, variable.address)
 
-    def create_temp(self, val, type, addr):
+    def createTemp(self, val, type, addr):
         self.__write(
             """
             ldc {}
             """.format(val)
         )
-        return self.store_val(type, addr)
+        return self.storeVal(type, addr)
 
-    def store_val(self, type, addr):
+    def storeVal(self, type, addr):
         if type == 'str':
             self.__write(
                 """
@@ -196,7 +175,7 @@ class Jasmin:
             )
         return addr
 
-    def load_temp(self, val, type):
+    def loadTemp(self, val, type):
         if type == 'int' or type == 'bool':
             self.__write(
                 """
@@ -216,70 +195,55 @@ class Jasmin:
                 """.format(val)
             )
 
-    def load_var(self, var, scopeController, addr):
+    def loadVar(self, var, scopeController, addr):
         varData = self.symbolTable[var]
-
-        if varData.scope:
-            if varData.type == 'int' or varData.type == 'bool':
-                self.__write(
-                    """
-                     iload {}
-                     """.format(varData.address)
-                )
-            elif varData.type == 'float':
-                self.__write(
-                    """
-                    fload {}
-                    """.format(varData.address)
-                )
-            elif varData.type == 'str':
-                self.__write(
-                    """
-                    aload {}
-                    """.format(varData.address)
-                )
-        else:
+        
+        if varData.type == 'int' or varData.type == 'bool':
             self.__write(
                 """
-                getstatic {}/{} {}
-                """.format(self.fileName, var, typeConvert(varData.type))
+                    iload {}
+                    """.format(varData.address)
             )
-        return self.store_val(varData.type, addr)
+        elif varData.type == 'float':
+            self.__write(
+                """
+                fload {}
+                """.format(varData.address)
+            )
+        elif varData.type == 'str':
+            self.__write(
+                """
+                aload {}
+                """.format(varData.address)
+            )
+        return self.storeVal(varData.type, addr)
 
-    def store_var(self, var, val, address, scopeController):
+    def storeVar(self, var, val, address, scopeController):
         varData = self.getVar(var, scopeController)
 
-        if varData.scope:
-            if varData.type == 'int' or varData.type == 'bool':
-                self.__write(
-                    """
-                    iload {}
-                    istore {}
-                    """.format(val, address)
-                )
-            elif varData.type == 'float':
-                self.__write(
-                    """
-                    fload {}
-                    fstore {}
-                    """.format(val, address)
-                )
-            elif varData.type == 'str':
-                self.__write(
-                    """
-                    aload {}
-                    astore {}
-                    """.format(val, address)
-                )
-        else:
-            self.load_temp(val, varData.type)
+        if varData.type == 'int' or varData.type == 'bool':
             self.__write(
                 """
-                putstatic {}/{} {}
-                """.format(self.fileName, var, typeConvert(varData.type))
+                iload {}
+                istore {}
+                """.format(val, address)
+            )
+        elif varData.type == 'float':
+            self.__write(
+                """
+                fload {}
+                fstore {}
+                """.format(val, address)
+            )
+        elif varData.type == 'str':
+            self.__write(
+                """
+                aload {}
+                astore {}
+                """.format(val, address)
             )
 
-    def enter_else(self, index):
+    def enterElse(self, index):
         self.__write(
             """
             goto end_else_{}
@@ -287,7 +251,7 @@ class Jasmin:
             """.format(index, index)
         )
 
-    def make_label(self, labelName):
+    def makeLabel(self, labelName):
         self.__write(
             """
             {}:
@@ -301,7 +265,7 @@ class Jasmin:
                 getstatic java/lang/System/out Ljava/io/PrintStream;
                 """
             )
-            self.load_temp(val, type)
+            self.loadTemp(val, type)
             self.__write(
                 """
                 invokevirtual java/io/PrintStream/print({})V
@@ -345,12 +309,12 @@ class Jasmin:
                 """.format(typeConvert(table.type))
             )
 
-        addr = self.store_val(table.type, table.address)
+        addr = self.storeVal(table.type, table.address)
         if not table.scope:
-            self.store_var(var, table.address, None, None)
+            self.storeVar(var, table.address, None, None)
 
-    def enter_if(self, id):
-        self.load_temp(id, 'int')
+    def enterIf(self, id):
+        self.loadTemp(id, 'int')
         self.__write(
             """
             ldc 0
@@ -383,12 +347,12 @@ class Jasmin:
             """.format(loop_idx)
         )
 
-    def write_inh(self, line):
+    def writeInh(self, line):
         self.__write(line)
 
     def add(self, type, addr1, addr2, addr3):
-        self.load_temp(addr1, type)
-        self.load_temp(addr2, type)
+        self.loadTemp(addr1, type)
+        self.loadTemp(addr2, type)
         if type == 'int':
             self.__write(
                 """
@@ -401,11 +365,11 @@ class Jasmin:
                 fadd
                 """
             )
-        return self.store_val(type, addr3)
+        return self.storeVal(type, addr3)
 
     def sub(self, type, addr1, addr2, addr3):
-        self.load_temp(addr1, type)
-        self.load_temp(addr2, type)
+        self.loadTemp(addr1, type)
+        self.loadTemp(addr2, type)
         if type == 'int':
             self.__write(
                 """
@@ -418,11 +382,11 @@ class Jasmin:
                 fsub
                 """
             )
-        return self.store_val(type, addr3)
+        return self.storeVal(type, addr3)
 
     def mult(self, type, addr1, addr2, addr3):
-        self.load_temp(addr1, type)
-        self.load_temp(addr2, type)
+        self.loadTemp(addr1, type)
+        self.loadTemp(addr2, type)
         if type == 'int':
             self.__write(
                 """
@@ -435,11 +399,11 @@ class Jasmin:
                 fmul
                 """
             )
-        return self.store_val(type, addr3)
+        return self.storeVal(type, addr3)
 
     def div(self, type, addr1, addr2, addr3):
-        self.load_temp(addr1, type)
-        self.load_temp(addr2, type)
+        self.loadTemp(addr1, type)
+        self.loadTemp(addr2, type)
         if type == 'int':
             self.__write(
                 """
@@ -452,10 +416,10 @@ class Jasmin:
                 fdiv
                 """
             )
-        return self.store_val(type, addr3)
+        return self.storeVal(type, addr3)
 
     def unaryMinus(self, type, addr1, addr3):
-        self.load_temp(addr1, type)
+        self.loadTemp(addr1, type)
         if type == 'int':
             self.__write(
                 """
@@ -470,22 +434,22 @@ class Jasmin:
                 fmul
                 """
             )
-        return self.store_val(type, addr3)
+        return self.storeVal(type, addr3)
 
     def notOp(self, val, addr):
-        self.load_temp(val, 'bool')
+        self.loadTemp(val, 'bool')
         self.__write(
             """
             ldc 1
             ixor
             """
         )
-        return self.store_val('bool', addr)
+        return self.storeVal('bool', addr)
 
     def compareExpressions(self, type, val1, val2, addr3, op):
         cmp = {'==': 'eq', '!=': 'ne', '>=': 'ge', '>': 'gt', '<=': 'le', '<': 'lt'}
-        self.load_temp(val1, type)
-        self.load_temp(val2, type)
+        self.loadTemp(val1, type)
+        self.loadTemp(val2, type)
         if type in ['int', 'bool']:
             self.__write(
                 """
@@ -514,16 +478,16 @@ class Jasmin:
             cmp_end{}:
             """.format(addr3, addr3, addr3, addr3)
         )
-        return self.store_val('bool', addr3)
+        return self.storeVal('bool', addr3)
 
-    def int_to_float(self, addr):
-        self.load_temp(addr, "int")
+    def intToFloat(self, addr):
+        self.loadTemp(addr, "int")
         self.__write(
             """
             i2f
             """
         )
-        return self.store_val("float", addr)
+        return self.storeVal("float", addr)
 
     def closeMain(self):
         self.__write(
@@ -534,12 +498,10 @@ class Jasmin:
         )
 
 class Id:
-    def __init__(self, address: int = None, type=None, scope=None, function: bool = False, local: bool = False, isConstant: bool = False, isInitialized: bool = False):
+    def __init__(self, address: int = None, type=None, scope=None, isConstant: bool = False, isInitialized: bool = False):
         self.type = type
         self.scope = scope 
         self.address = address
-        self.function = function
-        self.local = local
         self.isConstant = isConstant
         self.isInitialized = isInitialized
 

@@ -7,5 +7,5 @@ fat(int n): int
 end
 
 main:
-    print(fat(5));
+    print(fat(6));
 end
