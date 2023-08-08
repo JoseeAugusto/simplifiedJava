@@ -3,6 +3,11 @@ class ErrorVariableNotDeclared(Exception):
         message = 'Line {}: ID not declared: {}'.format(line, id)
         super().__init__(message)
 
+class ErrorVariableNotInitialized(Exception):
+    def __init__(self, line, id):
+        message = 'Line {}: ID not initialized: {}'.format(line, id)
+        super().__init__(message)
+
 class ErrorDeclarationAlreadyMade(Exception):
     def __init__(self, line, id):
         message = 'Line {}: ID already declared: {}'.format(line, id)
@@ -26,6 +31,16 @@ class ErroTipoIncompativelDecl(Exception):
 class ErrorBreakScope(Exception):
     def __init__(self, line):
         message = 'Line {}: break out of a while scope'.format(line)
+        super().__init__(message)
+
+class ErrorReturnInNonTypedFunction(Exception):
+    def __init__(self, line):
+        message = 'Line {}: return in a non-typed function'.format(line)
+        super().__init__(message)
+
+class ErrorExpectedReturnCommand(Exception):
+    def __init__(self, line):
+        message = 'Line {}: expected return command'.format(line)
         super().__init__(message)
 
 class ErrorTypeExpression(Exception):
@@ -53,10 +68,10 @@ class ErroDuplaExpressao(Exception):
         mensagem = 'Linha {}: Expressão possui mais comparadores do que atributos'.format(line)
         super().__init__(mensagem)
 
-class ErroArgumentoEsperado(Exception):
-    def __init__(self, line, expectedArgs, recivedArgs):
-        mensagem = 'Linha {}: Esperado {} argumentos, mas somente foram recebidos {}'.format(line, expectedArgs, recivedArgs)
-        super().__init__(mensagem)
+class ErrorExpectedArgument(Exception):
+    def __init__(self, line, expectedArgs, receivedArgs):
+        message = 'Line {}: Expected {} arguments, but {} received'.format(line, expectedArgs, receivedArgs)
+        super().__init__(message)
 
 class ErrorVariableNotFoundAtSymbolTable(Exception):
     def __init__(self, varName, scope):

@@ -6,8 +6,9 @@ else:
     from gen.simplifiedJavaGrammarParser import simplifiedJavaGrammarParser
 from jasmin import Jasmin, Id
 from error import ErroTipoIncompativelDecl, ErrorUnexpectedType, ErrorTypeNotReported, ErrorBreakScope, ErrorDeclarationAlreadyMade, \
-    ErrorVariableNotDeclared, ErrorTypeExpression, ErroTipoExpressaoDiferenteDeIncremento, ErroRetorno, \
-    ErroDuplaExpressao, ErroArgumentoEsperado, ErroDeclaracaoDepoisDoBloco, ErrorConstantChangeValue
+    ErrorVariableNotDeclared, ErrorVariableNotInitialized, ErrorTypeExpression, ErroTipoExpressaoDiferenteDeIncremento, ErroRetorno, \
+    ErroDuplaExpressao, ErrorExpectedArgument, ErroDeclaracaoDepoisDoBloco, ErrorConstantChangeValue, ErrorReturnInNonTypedFunction, \
+        ErrorExpectedReturnCommand
 
 
 # This class defines a complete listener for a parse tree produced by simplifiedJavaGrammarParser.
@@ -21,6 +22,10 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
     countIf = 0
     stackWhile = []
     countWhile = 0
+    stackFunctionType = []
+    functionArguments = {}
+    stackReturn = []
+    countReturn = 0
 
     def __init__(self, filename):
         self.jasmin = Jasmin(filename, self.symbolTable)
@@ -39,10 +44,61 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#functionDeclarationArea.
     def enterFunctionDeclarationArea(self, ctx:simplifiedJavaGrammarParser.FunctionDeclarationAreaContext):
+        self.scopeController = True
+        self.stackBlock.append("function")
+        functionId = ctx.ID(0).getText()
+        
+        if len(ctx.ID()) <= len(ctx.TYPE()):
+            self.stackFunctionType.append(ctx.TYPE()[-1].getText())
+        else:
+            self.stackFunctionType.append(None)
+
+        if functionId in self.symbolTable:
+            raise ErrorDeclarationAlreadyMade(ctx.start.line, functionId)
+
+        self.symbolTable[functionId] = Id(type=self.stackFunctionType[-1], scope=False, address=self.newAddressController, isConstant=False, isInitialized = True)
+
+        self.newAddressController += 1
+
+        args = []
+        argsNames = []
+
+        if len(ctx.ID()) <= len(ctx.TYPE()):
+            listOfIdAndType = list(zip(ctx.ID()[1:], ctx.TYPE()[0:-1]))
+        else:
+            listOfIdAndType = list(zip(ctx.ID()[1:], ctx.TYPE()[0:]))
+
+        for id, type in listOfIdAndType:
+            if id in self.symbolTable and self.symbolTable[id].scope == self.scopeController:
+                raise ErrorDeclarationAlreadyMade(ctx.start.line, id.getText())
+
+            self.symbolTable[id.getText()] = Id(type=type.getText(), scope=self.scopeController, address=self.newAddressController, isConstant=False, isInitialized = True)
+            self.newAddressController += 1
+            args.append(type.getText())
+            argsNames.append(id.getText())
+
+        self.functionArguments[functionId] = args
+        self.jasmin.createFunction(functionId, argsNames)
+
         pass
+        
+        
+
+        
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#functionDeclarationArea.
     def exitFunctionDeclarationArea(self, ctx:simplifiedJavaGrammarParser.FunctionDeclarationAreaContext):
+        if self.stackFunctionType[-1] != None and self.countReturn == 0:
+            raise ErrorExpectedReturnCommand(ctx.start.line)
+
+        self.jasmin.closeFunction()
+        self.stackBlock.pop()
+
+        for item in list(self.symbolTable):
+            if self.symbolTable[item].scope:
+                del self.symbolTable[item]
+
+        self.controle_escopo = False
         pass
 
 
@@ -50,7 +106,7 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
     def enterMain(self, ctx:simplifiedJavaGrammarParser.MainContext):
         self.jasmin.createMain()
         self.scopeController = True
-        self.stackBlock.append('function')
+        self.stackBlock.append("main")
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#main.
@@ -88,7 +144,7 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             if token.getText() in self.symbolTable and self.symbolTable[token.getText()].scope == False:
                 self.symbolTableCopy[token.getText()] = self.symbolTable[token.getText()]
 
-            self.symbolTable[token.getText()] = Id(type=ctx.TYPE().getText(), scope=self.scopeController, address=self.newAddressController, isConstant=False)
+            self.symbolTable[token.getText()] = Id(type=ctx.TYPE().getText(), scope=self.scopeController, address=self.newAddressController, isConstant=False, isInitialized = False)
             self.newAddressController += 1 # atualiza o proximo endereco disponivel
             self.jasmin.create(token.getText(), ctx.TYPE().getText(), self.scopeController, False, 0)
         pass
@@ -114,25 +170,25 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             
             if ctx.INT(countInt) != None and ctx.INT(countInt).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='int', scope=self.scopeController,
-                                                        address=self.newAddressController, isConstant=True)
+                                                        address=self.newAddressController, isConstant=True, isInitialized = True)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'int', self.scopeController, True, ctx.INT(countInt).getText())
                 countInt += 1
             elif ctx.FLOAT(countFloat) != None and ctx.FLOAT(countFloat).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='float', scope=self.scopeController,
-                                                        address=self.newAddressController, isConstant=True)
+                                                        address=self.newAddressController, isConstant=True, isInitialized = True)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'float', self.scopeController, True, ctx.FLOAT(countFloat).getText())
                 countFloat += 1
             elif ctx.STRING(countString) != None and ctx.STRING(countString).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='str', scope=self.scopeController,
-                                                        address=self.newAddressController, isConstant=True)
+                                                        address=self.newAddressController, isConstant=True, isInitialized = True)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'str', self.scopeController, True, ctx.STRING(countString).getText())
                 countString += 1
             else:
                 self.symbolTable[token.getText()] = Id(type='bool', scope=self.scopeController,
-                                                        address=self.newAddressController, isConstant=True)
+                                                        address=self.newAddressController, isConstant=True, isInitialized = True)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'bool', self.scopeController, True, ctx.BOOLEAN(countBool).getText())
                 countBool += 1
@@ -152,10 +208,30 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#callFunctionCommand.
     def enterCallFunctionCommand(self, ctx:simplifiedJavaGrammarParser.CallFunctionCommandContext):
+        ctxId = ctx.ID().getText()
+        if ctxId not in self.symbolTable:
+            raise ErrorVariableNotDeclared(ctx.start.line, ctxId)
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#callFunctionCommand.
     def exitCallFunctionCommand(self, ctx:simplifiedJavaGrammarParser.CallFunctionCommandContext):
+        functionId = ctx.ID().getText()
+
+        if len(self.functionArguments[functionId]) != len(ctx.expression()):
+            raise ErrorExpectedArgument(ctx.start.line, len(self.functionArguments[functionId]), len(ctx.expression()))
+
+        for expected, recieved in list(zip(self.functionArguments[functionId], ctx.expression())):
+            if expected != recieved.type:
+                raise ErrorUnexpectedType(ctx.start.line, expected, recieved.type)
+
+        ctx.type = self.symbolTable[functionId].type
+
+        args = []
+        types = []
+        for exp in ctx.expression():
+            args.append(exp.val)
+            types.append(exp.type)
+        ctx.val = self.jasmin.createFunctionCall(functionId, args, types)
         pass
 
 
@@ -240,10 +316,19 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#returnCommand.
     def enterReturnCommand(self, ctx:simplifiedJavaGrammarParser.ReturnCommandContext):
+        if self.stackFunctionType[-1] == None or self.stackBlock[-1] == 'main':
+            raise ErrorReturnInNonTypedFunction(ctx.start.line)
+
+        self.stackReturn.append(self.countReturn)
+        self.countReturn += 1
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#returnCommand.
     def exitReturnCommand(self, ctx:simplifiedJavaGrammarParser.ReturnCommandContext):
+        if self.stackFunctionType[-1] != ctx.expression().type:
+            raise ErrorUnexpectedType(ctx.start.line, self.stackFunctionType[-1], ctx.expression().type)
+
+        self.jasmin.createReturnCommand(ctx.expression().val, self.stackFunctionType[-1])
         pass
 
 
@@ -279,7 +364,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
         variable = self.symbolTable[ctxId]
         if variable.isConstant:
             raise ErrorConstantChangeValue(ctx.start.line)
-
+        self.symbolTable[ctxId].isInitialized = True
+        self.jasmin.symbolTable[ctxId].isInitialized = True
         if self.scopeController:
             expected = variable.type
             received = ctx.expression().type
@@ -542,6 +628,10 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
         ctxId = ctx.ID().getText()
         if ctxId not in self.symbolTable:
             raise ErrorVariableNotDeclared(ctx.start.line, ctxId)
+        
+        variable = self.symbolTable[ctxId]
+        if not variable.isInitialized:
+            raise ErrorVariableNotInitialized(ctx.start.line, ctxId)
 
         ctx.type = self.symbolTable[ctxId].type
         ctx.val = self.jasmin.load_var(ctxId, self.scopeController, self.newAddressController)

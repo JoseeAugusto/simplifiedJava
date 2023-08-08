@@ -1,0 +1,11 @@
+soma(): int
+   var:
+    n: int;
+
+    n = 3;
+    return n+n;
+end
+
+main:
+    print(soma());
+end

@@ -94,6 +94,79 @@ class Jasmin:
             """.format(self.MAX_LOCALS)
         )
 
+    def createFunction(self, name, parameters):
+        param = ''
+        for p in parameters:
+            param += typeConvert(self.symbolTable[p].type)
+
+        self.__write(
+            """
+            .method public static {}({}){}
+            .limit stack 5
+            .limit locals {}
+            """.format(name, param, typeConvert(self.symbolTable[name].type), self.MAX_LOCALS)
+        )
+        for idx, p in enumerate(parameters):
+            self.symbolTable[p].address = idx
+            self.symbolTable[p].local = True
+
+    def closeFunction(self):
+        self.__write(
+            """
+            return
+            .end method
+            """
+        )
+
+    def createReturnCommand(self, val, type):
+        returnType = typeConvert(type)
+        if (returnType == 'V'):
+            self.__write(
+                """
+                return
+                """
+            )
+            return
+
+        self.load_temp(val, type)
+        if returnType == 'I' or returnType == 'Z':
+            self.__write(
+                """
+                ireturn
+                """
+            )
+        elif returnType == 'F':
+            self.__write(
+                """
+                freturn
+                """
+            )
+        elif returnType == 'V':
+            self.__write(
+                """
+                return
+                """
+            )
+        elif returnType == 'Ljava/lang/String;':
+            self.__write(
+                """
+                areturn
+                """
+            )
+
+    def createFunctionCall(self, func_name, params, types):
+        variable = self.symbolTable[func_name]
+        args = ''
+        for p, t in zip(params, types):
+            self.load_temp(p, t)
+            args += typeConvert(t)
+        self.__write(
+            """
+            invokestatic {}.{}({}){}
+            """.format(self.fileName, func_name, args, typeConvert(variable.type))
+        )
+        return self.store_val(variable.type, variable.address)
+
     def create_temp(self, val, type, addr):
         self.__write(
             """
@@ -328,7 +401,6 @@ class Jasmin:
                 fadd
                 """
             )
-        # concatenar string (descobrir como concatena string)
         return self.store_val(type, addr3)
 
     def sub(self, type, addr1, addr2, addr3):
@@ -462,13 +534,14 @@ class Jasmin:
         )
 
 class Id:
-    def __init__(self, address: int = None, type=None, scope=None, function: bool = False, local: bool = False, isConstant: bool = False):
+    def __init__(self, address: int = None, type=None, scope=None, function: bool = False, local: bool = False, isConstant: bool = False, isInitialized: bool = False):
         self.type = type
         self.scope = scope 
         self.address = address
         self.function = function
         self.local = local
         self.isConstant = isConstant
+        self.isInitialized = isInitialized
 
 def typeConvert(type):
         descriptor = {'int': 'I', 'float': 'F', 'str': 'Ljava/lang/String;', 'bool': 'Z', None: 'V'}

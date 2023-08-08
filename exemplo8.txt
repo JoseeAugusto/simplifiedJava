@@ -1,0 +1,11 @@
+fat(int n): int
+    if(n == 1):
+        return n;
+    else:
+        return n*fat(n-1);
+    end
+end
+
+main:
+    print(fat(5));
+end
