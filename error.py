@@ -57,3 +57,23 @@ class ErrorConstantChangeValue(Exception):
     def __init__(self, line):
         message = 'Line {}: Constants cannot be changed'.format(line)
         super().__init__(message)
+
+class ErrorPrintWithNonTypedFunction(Exception):
+    def __init__(self, line):
+        message = 'Line {}: print with non-typed function'.format(line)
+        super().__init__(message)
+
+class ErrorMultipleComparativeExpressions(Exception):
+    def __init__(self, line):
+        message = 'Line {}: Multiple comparative operators are not supported'.format(line)
+        super().__init__(message)
+
+class ErrorNotAFunction(Exception):
+    def __init__(self, line, id):
+        message = 'Line {}: {} is not a function'.format(line, id)
+        super().__init__(message)
+
+class ErrorNotAVariable(Exception):
+    def __init__(self, line, id):
+        message = 'Line {}: {} is not a variable'.format(line, id)
+        super().__init__(message)

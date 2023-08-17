@@ -1,16 +1,8 @@
-soma(): int
-   var:
-    n: int;
-
-    n = 3;
-    return n+n;
-end
-
 main:
-    print(soma());
-    
-    if(True>False):
-        print("oi\n");
-        print(5+2.7);
-    end
+    var:
+        const n1 = 5, n2 = 10.0, n3 = 50.0;
+        const s4 = "oi";
+
+    print(n1+n2/n3);
+    print("\n", s4);
 end

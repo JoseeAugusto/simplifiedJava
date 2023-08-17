@@ -8,7 +8,8 @@ from jasmin import Jasmin, Id
 from error import ErrorUnexpectedType, ErrorTypeNotReported, ErrorBreakScope, ErrorDeclarationAlreadyMade, \
     ErrorVariableNotDeclared, ErrorVariableNotInitialized, ErrorTypeExpression, \
     ErrorExpectedArgument, ErrorConstantChangeValue, ErrorReturnInNonTypedFunction, \
-        ErrorExpectedReturnCommand
+        ErrorExpectedReturnCommand, ErrorPrintWithNonTypedFunction, ErrorMultipleComparativeExpressions, \
+            ErrorNotAFunction, ErrorNotAVariable
 
 
 # This class defines a complete listener for a parse tree produced by simplifiedJavaGrammarParser.
@@ -28,6 +29,7 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
         self.functionArguments = {}
         self.stackReturn = []
         self.countReturn = 0
+        self.isComparativeExpression = False
         self.jasmin = Jasmin(filename, self.symbolTable)
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#program.
@@ -56,7 +58,7 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
         if functionId in self.symbolTable:
             raise ErrorDeclarationAlreadyMade(ctx.start.line, functionId)
 
-        self.symbolTable[functionId] = Id(type=self.stackFunctionType[-1], scope=False, address=self.newAddressController, isConstant=False, isInitialized = True)
+        self.symbolTable[functionId] = Id(type=self.stackFunctionType[-1], scope=False, address=self.newAddressController, isConstant=False, isInitialized = True, isFunction=True)
 
         self.newAddressController += 1
 
@@ -72,7 +74,7 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             if id in self.symbolTable and self.symbolTable[id].scope == self.scopeController:
                 raise ErrorDeclarationAlreadyMade(ctx.start.line, id.getText())
 
-            self.symbolTable[id.getText()] = Id(type=type.getText(), scope=self.scopeController, address=self.newAddressController, isConstant=False, isInitialized = True)
+            self.symbolTable[id.getText()] = Id(type=type.getText(), scope=self.scopeController, address=self.newAddressController, isConstant=False, isInitialized = True, isFunction=False)
             self.newAddressController += 1
             args.append(type.getText())
             argsNames.append(id.getText())
@@ -141,7 +143,7 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             if token.getText() in self.symbolTable and self.symbolTable[token.getText()].scope == False:
                 self.symbolTableCopy[token.getText()] = self.symbolTable[token.getText()]
 
-            self.symbolTable[token.getText()] = Id(type=ctx.TYPE().getText(), scope=self.scopeController, address=self.newAddressController, isConstant=False, isInitialized = False)
+            self.symbolTable[token.getText()] = Id(type=ctx.TYPE().getText(), scope=self.scopeController, address=self.newAddressController, isConstant=False, isInitialized = False, isFunction=False)
             self.newAddressController += 1
             self.jasmin.create(token.getText(), ctx.TYPE().getText(), self.scopeController, False, 0)
         pass
@@ -167,25 +169,25 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             
             if ctx.INT(countInt) != None and ctx.INT(countInt).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='int', scope=self.scopeController,
-                                                        address=self.newAddressController, isConstant=True, isInitialized = True)
+                                                        address=self.newAddressController, isConstant=True, isInitialized = True, isFunction=False)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'int', self.scopeController, True, ctx.INT(countInt).getText())
                 countInt += 1
             elif ctx.FLOAT(countFloat) != None and ctx.FLOAT(countFloat).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='float', scope=self.scopeController,
-                                                        address=self.newAddressController, isConstant=True, isInitialized = True)
+                                                        address=self.newAddressController, isConstant=True, isInitialized = True, isFunction=False)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'float', self.scopeController, True, ctx.FLOAT(countFloat).getText())
                 countFloat += 1
             elif ctx.STRING(countString) != None and ctx.STRING(countString).getText() == ctx.terminal[i].text:
                 self.symbolTable[token.getText()] = Id(type='str', scope=self.scopeController,
-                                                        address=self.newAddressController, isConstant=True, isInitialized = True)
+                                                        address=self.newAddressController, isConstant=True, isInitialized = True, isFunction=False)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'str', self.scopeController, True, ctx.STRING(countString).getText())
                 countString += 1
             else:
                 self.symbolTable[token.getText()] = Id(type='bool', scope=self.scopeController,
-                                                        address=self.newAddressController, isConstant=True, isInitialized = True)
+                                                        address=self.newAddressController, isConstant=True, isInitialized = True, isFunction=False)
                 self.newAddressController += 1 
                 self.jasmin.create(token.getText(), 'bool', self.scopeController, True, ctx.BOOLEAN(countBool).getText())
                 countBool += 1
@@ -208,6 +210,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
         ctxId = ctx.ID().getText()
         if ctxId not in self.symbolTable:
             raise ErrorVariableNotDeclared(ctx.start.line, ctxId)
+        if(self.symbolTable[ctxId].isFunction == False):
+            raise ErrorNotAFunction(ctx.start.line, ctxId)
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#callFunctionCommand.
@@ -288,6 +292,11 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
     def exitPrintCommand(self, ctx:simplifiedJavaGrammarParser.PrintCommandContext):
         typeVal = []
         for expr in ctx.expression():
+            if(expr.type == None):
+                raise ErrorPrintWithNonTypedFunction(ctx.start.line)
+            if(expr.getText() in self.symbolTable):
+                if(self.symbolTable[expr.getText()].isFunction == True):
+                    raise ErrorNotAVariable(ctx.start.line, expr.getText())
             typeVal.append((expr.type, expr.val))
 
         self.jasmin.print(typeVal)
@@ -303,6 +312,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             variable = self.symbolTable[ctxId]
             if variable.isConstant:
                 raise ErrorConstantChangeValue(ctx.start.line) 
+            if variable.isFunction:
+                raise ErrorNotAVariable(ctx.start.line, ctxId)
             self.symbolTable[ctxId].isInitialized = True 
             self.jasmin.scanf(ctxId, self.scopeController)
         pass
@@ -362,6 +373,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
         variable = self.symbolTable[ctxId]
         if variable.isConstant:
             raise ErrorConstantChangeValue(ctx.start.line)
+        if variable.isFunction:
+            raise ErrorNotAVariable(ctx.start.line, ctxId)
         self.symbolTable[ctxId].isInitialized = True
         self.jasmin.symbolTable[ctxId].isInitialized = True
         if self.scopeController:
@@ -398,6 +411,9 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#comparativeOperation.
     def enterComparativeOperation(self, ctx:simplifiedJavaGrammarParser.ComparativeOperationContext):
+        if self.isComparativeExpression:
+            raise ErrorMultipleComparativeExpressions(ctx.start.line)
+        self.isComparativeExpression = True
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#comparativeOperation.
@@ -419,6 +435,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
             self.jasmin.writeInh(ctx.inh.format(ctx.term().val + 1))
         elif ctx.inhType == 'if':
             ctx.end_label = self.jasmin.enterIf(ctx.term().val + 1)
+        
+        self.isComparativeExpression = False
         pass
 
 
@@ -435,6 +453,9 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
 
     # Enter a parse tree produced by simplifiedJavaGrammarParser#equalDiffOperation.
     def enterEqualDiffOperation(self, ctx:simplifiedJavaGrammarParser.EqualDiffOperationContext):
+        if self.isComparativeExpression:
+            raise ErrorMultipleComparativeExpressions(ctx.start.line)
+        self.isComparativeExpression = True
         pass
 
     # Exit a parse tree produced by simplifiedJavaGrammarParser#equalDiffOperation.
@@ -451,6 +472,8 @@ class MySimplifiedJavaGrammarListener(ParseTreeListener):
         ctx.type = 'bool'
         ctx.val = self.jasmin.compareExpressions(termType, termVal, term2Val, self.newAddressController, ctx.op.text)
         self.newAddressController += 1
+
+        self.isComparativeExpression = False
         pass
 
 

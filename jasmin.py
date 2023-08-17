@@ -498,12 +498,13 @@ class Jasmin:
         )
 
 class Id:
-    def __init__(self, address: int = None, type=None, scope=None, isConstant: bool = False, isInitialized: bool = False):
+    def __init__(self, address: int = None, type=None, scope=None, isConstant: bool = False, isInitialized: bool = False, isFunction: bool = False):
         self.type = type
         self.scope = scope 
         self.address = address
         self.isConstant = isConstant
         self.isInitialized = isInitialized
+        self.isFunction = isFunction
 
 def typeConvert(type):
         descriptor = {'int': 'I', 'float': 'F', 'str': 'Ljava/lang/String;', 'bool': 'Z', None: 'V'}

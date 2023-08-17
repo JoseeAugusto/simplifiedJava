@@ -1,0 +1,7 @@
+n1(): int
+    return 5;
+end
+
+main:
+    n1 = 5;
+end
