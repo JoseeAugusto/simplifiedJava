@@ -1,4 +1,4 @@
-# Generated from C:/Users/jose1/Documents/UFPI/6º período/Compiladores/trabFinal/javaSimplificadoCompleto\simplifiedJavaGrammar.g4 by ANTLR 4.12.0
+# Generated from c:\Users\cassi\Documents\dev\uni\compilers\simple-java-compiler\simple-java\simplifiedJavaGrammar.g4 by ANTLR 4.9.2
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .simplifiedJavaGrammarParser import simplifiedJavaGrammarParser

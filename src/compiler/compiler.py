@@ -4,9 +4,7 @@ from gen.simplifiedJavaGrammarLexer import simplifiedJavaGrammarLexer
 from gen.simplifiedJavaGrammarParser import simplifiedJavaGrammarParser
 from MysimplifiedJavaGrammarListener import MySimplifiedJavaGrammarListener
 
-if __name__ == '__main__':
-    file = FileStream("exemplo12.txt")
-
+def compiler(file):
     # parte lexica
     lexer = simplifiedJavaGrammarLexer(file)
     streams = CommonTokenStream(lexer)
@@ -18,7 +16,7 @@ if __name__ == '__main__':
         exit(1)
 
     # parte analise semantica
-    filename = 'ex'
+    filename = 'code'
     l = MySimplifiedJavaGrammarListener(filename)
     walker = ParseTreeWalker()
     walker.walk(l, tree)
