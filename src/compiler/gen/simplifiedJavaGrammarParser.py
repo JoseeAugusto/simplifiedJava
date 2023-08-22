@@ -694,7 +694,7 @@ class simplifiedJavaGrammarParser ( Parser ):
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.terminal = None # Token
+            self.terminal = []
 
         def ID(self, i:int=None):
             if i is None:
@@ -760,10 +760,10 @@ class simplifiedJavaGrammarParser ( Parser ):
             self.state = 120
             self.match(simplifiedJavaGrammarParser.T__9)
             self.state = 121
-            localctx.terminal = self._input.LT(1)
+            localctx.terminal.append(self._input.LT(1))
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << simplifiedJavaGrammarParser.INT) | (1 << simplifiedJavaGrammarParser.FLOAT) | (1 << simplifiedJavaGrammarParser.STRING) | (1 << simplifiedJavaGrammarParser.BOOLEAN))) != 0)):
-                localctx.terminal = self._errHandler.recoverInline(self)
+                localctx.terminal.append(self._errHandler.recoverInline(self))
             else:
                 self._errHandler.reportMatch(self)
                 self.consume()
@@ -778,10 +778,10 @@ class simplifiedJavaGrammarParser ( Parser ):
                 self.state = 124
                 self.match(simplifiedJavaGrammarParser.T__9)
                 self.state = 125
-                localctx.terminal = self._input.LT(1)
+                localctx.terminal.append(self._input.LT(1))
                 _la = self._input.LA(1)
                 if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << simplifiedJavaGrammarParser.INT) | (1 << simplifiedJavaGrammarParser.FLOAT) | (1 << simplifiedJavaGrammarParser.STRING) | (1 << simplifiedJavaGrammarParser.BOOLEAN))) != 0)):
-                    localctx.terminal = self._errHandler.recoverInline(self)
+                    localctx.terminal.append(self._errHandler.recoverInline(self))
                 else:
                     self._errHandler.reportMatch(self)
                     self.consume()
